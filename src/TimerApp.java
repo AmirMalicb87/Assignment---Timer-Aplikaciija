@@ -1,7 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 
 public class TimerApp {
     private JFrame settingsFrame;
@@ -103,18 +107,22 @@ public class TimerApp {
 
         if (onTimeRadio.isSelected()) {
             try {
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-                Date targetTime = sdf.parse(timeField.getText());
-                Date currentTime = new Date();
+                String time1 = timeField.getText();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalTime targetTime = LocalTime.parse(time1, formatter);
+                LocalTime now = LocalTime.now();
 
-                long delay = targetTime.getTime() - currentTime.getTime();
-                if (delay < 0) delay += 24 * 60 * 60 * 1000;
+                long delay = Duration.between(now, targetTime).toMillis();
+
+                if (delay < 0) {
+                    delay += Duration.ofDays(1).toMillis();
+                }
 
                 countdownTimer = new Timer((int)delay, e -> showBlinkWindow());
                 countdownTimer.setRepeats(false);
                 countdownTimer.start();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(settingsFrame, "Invalid time format");
+                JOptionPane.showMessageDialog(settingsFrame, "Invalid time format (use HH:mm:ss)");
                 setControlsEnabled(true);
             }
         } else {
@@ -136,7 +144,7 @@ public class TimerApp {
         blinkFrame.setSize(300, 200);
         blinkFrame.setLocationRelativeTo(null);
 
-        int speed = Integer.parseInt(speedCombo.getSelectedItem().toString().split(" ")[0]);
+        int speed = Integer.parseInt(Objects.requireNonNull(speedCombo.getSelectedItem()).toString().split(" ")[0]);
         blinkTimer = new Timer(speed, e -> {
             blinkFrame.getContentPane().setBackground(isWhite ? Color.WHITE : selectedColor);
             isWhite = !isWhite;
